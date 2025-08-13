@@ -1,0 +1,59 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        if [[ "$RUNNER_OS" == "Linux" ]]; then
+          sudo apt-get update
+          sudo apt-get install -y zsh
+        elif [[ "$RUNNER_OS" == "macOS" ]]; then
+          brew install zsh
+        fi
+        
+    - name: Install BATS
+      run: |
+        git clone https://github.com/bats-core/bats-core.git /tmp/bats
+        cd /tmp/bats
+        sudo ./install.sh /usr/local
+        
+    - name: Verify dependencies
+      run: |
+        echo "Checking zsh..."
+        zsh --version
+        echo "Checking git..."
+        git --version
+        echo "Checking gh..."
+        gh --version
+        echo "Checking bats..."
+        bats --version
+        
+    - name: Validate script syntax
+      run: |
+        zsh -n gh-clean-branches
+        
+    - name: Run tests
+      run: |
+        bats tests/*.bats
+        
+    - name: Test script help
+      run: |
+        ./gh-clean-branches --help || [ $? -eq 1 ]
+        
+    - name: Test script dry-run
+      run: |
+        ./gh-clean-branches --dry-run --verbose

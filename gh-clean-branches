@@ -68,35 +68,9 @@ is_branch_safely_merged() {
     local default_diff=$(git diff "$merge_base..$default_branch" 2>/dev/null)
     
     # If the branch changes are contained within the default branch changes, it's safe
-    # This is a simple text-based check for squash merges
+    # This handles most squash merge scenarios where the exact same diff was applied
     if [[ -n "$default_diff" ]] && echo "$default_diff" | grep -qF "$branch_diff" 2>/dev/null; then
         return 0
-    fi
-    
-    # Alternative check: see if merging the branch into default would result in no changes
-    # Create a temporary test to see if merge would be empty
-    local temp_branch="temp-merge-test-$$"
-    git checkout -b "$temp_branch" "$default_branch" >/dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
-        # Try to merge the branch
-        git merge --no-commit --no-ff "$branch" >/dev/null 2>&1
-        local merge_result=$?
-        
-        # Check if there are any changes staged
-        local staged_changes=$(git diff --cached 2>/dev/null)
-        
-        # Clean up
-        git merge --abort >/dev/null 2>&1
-        git checkout "$default_branch" >/dev/null 2>&1
-        git branch -D "$temp_branch" >/dev/null 2>&1
-        
-        # If merge succeeded with no staged changes, the branch is effectively merged
-        if [[ $merge_result -eq 0 && -z "$staged_changes" ]]; then
-            return 0
-        fi
-    else
-        # If we couldn't create temp branch, fall back to basic checks
-        git checkout "$default_branch" >/dev/null 2>&1
     fi
     
     return 1
@@ -190,11 +164,10 @@ else
                 fi
               else
                 printf "%s\n" "❌  ${red}Could not delete${end} ${branch}"
-                printf "%s\n" "${yellow}Try using --force flag${end}"
+                printf "%s\n" "${yellow}Branch has unmerged changes. Try using --force flag if you're sure${end}"
               fi
             else
               printf "%s\n" "❌  ${red}Could not delete${end} ${branch}"
-              printf "%s\n" "${yellow}Try using --force flag${end}"
             fi
           fi
       done

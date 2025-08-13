@@ -33,6 +33,47 @@ gh clean-branches [--dry-run] [--force] [--verbose]
 - Deletes branches with no upstream and no un-pushed changes _(Skipped on `--dry-run`)_
 - Checkout the branch we started with unless it was deleted, then stays on the default branch
 
+## Testing
+
+This project includes comprehensive tests written with [BATS (Bash Automated Testing System)](https://github.com/bats-core/bats-core).
+
+### Running Tests
+
+1. **Install BATS** (if not already installed):
+   ```bash
+   git clone https://github.com/bats-core/bats-core.git /tmp/bats
+   cd /tmp/bats
+   sudo ./install.sh /usr/local
+   ```
+
+2. **Run all tests**:
+   ```bash
+   ./run-tests.sh
+   ```
+   
+   Or run individual test suites:
+   ```bash
+   bats tests/args.bats          # Command line argument tests
+   bats tests/functionality.bats # Core functionality tests  
+   bats tests/edge_cases.bats    # Error handling and edge cases
+   ```
+
+### Test Coverage
+
+The test suite covers:
+- **Argument parsing**: All command line flags and error cases
+- **Core functionality**: Branch identification, deletion, and preservation  
+- **Edge cases**: Non-git directories, no remotes, uncommitted changes
+- **Error handling**: Branches that can't be deleted, checkout failures
+- **Integration**: Full workflow testing with real git repositories
+
+### Continuous Integration
+
+Tests run automatically on GitHub Actions for:
+- Ubuntu and macOS
+- Every push and pull request
+- Multiple scenarios and edge cases
+
 ## Dependencies
 The extension depends on:
 - zsh

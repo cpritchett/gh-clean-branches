@@ -24,6 +24,15 @@ gh clean-branches [--dry-run] [--force] [--verbose]
 - `--force` Uses `git branch -D` forcing a branch to be deleted regardless if upstream branches have local changes. Use carefully!
 - `--verbose` Print all log statements.
 
+## Enhanced Squash/Rebase Merge Detection
+
+The extension now intelligently detects branches that were merged via squash or rebase operations and allows safe deletion without requiring the `--force` flag. This addresses the common issue where squash-merged branches appear to have "missing upstream" even though they were successfully merged.
+
+### How it works:
+- When `git branch -d` fails for a branch, the script analyzes the branch's changes
+- If the changes from the branch are already present in the default branch (indicating a squash/rebase merge), the branch is safely deleted
+- Only truly unmerged branches will require the `--force` flag
+
 ## Script flow
 - Fetches the repo
 - Checkout the default branch (e.g `main`) and pull changes (needed if we want to delete the current branch)
@@ -31,6 +40,7 @@ gh clean-branches [--dry-run] [--force] [--verbose]
 - Lists all local branches _(only with `--verbose` flag)_
 - Lists branches with missing upstream to be deleted
 - Deletes branches with no upstream and no un-pushed changes _(Skipped on `--dry-run`)_
+- **NEW:** For branches that fail regular deletion, checks if they were squash/rebase merged and deletes them safely
 - Checkout the branch we started with unless it was deleted, then stays on the default branch
 
 ## Dependencies
